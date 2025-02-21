@@ -11,24 +11,22 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Project : A_os_MembraneSensor_Processes
+ * Project : A_os
 */
 /*
- * process_3.c
+ * algo.h
  *
- *  Created on: May 20, 2024
+ *  Created on: Feb 17, 2025
  *      Author: fil
  */
 
-#include "main.h"
+#ifndef STM32G491_WS_APP_ALGO_H_
+#define STM32G491_WS_APP_ALGO_H_
 
-#include "../Common/A_os_includes.h"
+extern	void algo_init(void);
+extern	void algo_start(void);
+extern	void algo_stop(void);
+extern	void apply_algo(void);
 
-#ifdef	MEMBRANE_WS_2412171_00
 
-void process_3(uint32_t process_id)
-{
-	wait_event(HW_SLEEP_FOREVER);
-}
-
-#endif // #ifdef	MEMBRANE_2412171_00
+#endif /* STM32G491_WS_APP_ALGO_H_ */

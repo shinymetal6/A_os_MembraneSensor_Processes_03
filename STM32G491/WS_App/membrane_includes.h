@@ -25,25 +25,17 @@
 
 #include "../Common/flash_ops.h"
 #include "../Common/serial_packets.h"
+#include "algo.h"
 
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"MembraneTemp"
-#define		MAX_SENSORS				16
-#define		MAX_LINES				4
-#define		MAX_BOARDS				4
-#define		USB_BUF_LEN				64
-#define 	SINGLE_PKT_SIZE			6
-#define		SENSORS_NUM				MAX_SENSORS
-#define		SENSORS_LINE			MAX_LINES
+#define		APP_NAME				"Membrane-WSensor_03"
 
 #define		WATER_SENSOR			1
 #define		TEMPERATURE_SENSOR		2
-#define		SENSORS_BOARD_TYPE		TEMPERATURE_SENSOR
+#define		SENSORS_BOARD_TYPE		WATER_SENSOR
 
-#define		MAILBOX_ID				0
-#define		MAILBOX_LEN				32
 #define		SENSORS_TX_LEN			256
 #define		SAMPLES_LEN				32
 #define		SENSORS_RX_LEN266		266
@@ -60,6 +52,8 @@ extern	CRC_HandleTypeDef hcrc;
 #define		SENSORS_INITIATOR			0
 #define		SENSORS_CMD					1
 #define		SENSORS_ADDRESS				2
+#define		SENSORS_TYPE				3
+
 /* update packet definitions */
 #define		SENSORS_UPDATE_PKTCNT		3
 #define		SENSORS_UPDATE_DATA			4
@@ -97,24 +91,17 @@ extern	CRC_HandleTypeDef hcrc;
 #define		FLASHRAM_SIZE			(SENSORS_UPDATE_PAYLOAD*256)
 #define		FLASH_PARAMETER_SIZE	(2*FLASH_PAGE_SIZE)
 #define		FLASH_INFO_SIZE			(FLASH_PAGE_SIZE)
+#define		FLASH_MAXLEN			(FLASHRAM_SIZE-FLASH_PARAMETER_SIZE)
 
 #define		MEMBRANE_DAC_WAVETABLE_SIZE	256
 /*
  * Commands
  */
-#define	DOWNLOAD_PREPARE_COMMAND			'U'
-#define	DOWNLOAD_COMMAND					'D'
-#define	SINGLE_PACKET_DOWNLOAD_COMMAND		'S'
-#define	DOWNLOAD_CHECK_COMMAND				'C'
-#define	DOWNLOAD_FLASH_COMMAND				'F'
-#define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
-#define	SENSORS_DISCOVERY					'Z'
-#define	SENSORS_KWRITE						'K'
-#define	SENSORS_KREAD						'Q'
-#define	SENSORS_INFOREQ_CMDS				'I'
-#define	DOWNLOAD_PARAMS_COMMAND				'P'
-#define	SENSORS_SPECIAL_CMDS				'x'
+#define	SENSORS_GET_VERSION					'J'
+#define	DOWNLOAD_PREPARE_COMMAND			'U'
+#define	DOWNLOAD_COMMAND					'F'
+#define	WRITE_FLASH_COMMAND					'W'
 
 #define	SENSORS_INITIATOR_CHAR				'<'
 #define	SENSORS_TERMINATOR_CHAR				'>'
@@ -133,16 +120,13 @@ extern	CRC_HandleTypeDef hcrc;
 typedef struct
 {
 	uint8_t 		sensors_status;
-	uint8_t 		sensor_rxbuf[SENSORS_RX_LEN266];
-	uint8_t 		sensor_rxchar;
-	uint32_t 		sensor_rxindex;
-	uint32_t 		sensor_total_rxcount;
+	uint8_t 		sensor_rxbuf[SENSORS_RX_LEN266+4];
 	uint8_t 		sensor_rxstate;
-	uint8_t 		sensor_addressed_sensor;
+	uint8_t 		sensor_rxchar;
+	uint16_t 		sensor_rxindex;
+	uint32_t		sensor_total_rxcount;
+
 	char			sensor_txbuf[SENSORS_TX_LEN];
-	char			work_sensor_txbuf[SENSORS_TX_LEN];
-	uint32_t 		work_sensor_txbuflen;
-	uint32_t		sensor_rxpacket_counter;
 	uint32_t		sensor_check_bits[CHECK_BIT_SIZE];
 	uint32_t		sensor_check_bits_num;
 	/* sensors control */
@@ -154,11 +138,12 @@ typedef struct
 	uint32_t		flash_line_num;
 	uint8_t 		flash_flags;
 	uint8_t 		flash_pktcntr;
+	uint8_t 		last_flash_pktcntr_ok;
 	uint32_t		flash_pkt_crc;
 	uint32_t		flash_download_crc_error;
-	/* others */
-	uint8_t			name_version_string[USB_BUF_LEN];
-	uint8_t			name_version_string_len;
+	uint32_t		flash_download_sequence_error;
+	uint32_t		cumulative_flash_download_crc_error;
+	uint32_t		cumulative_flash_download_sequence_error;
 }MembraneSystem_TypeDef;
 
 /* sensors_status */
@@ -169,7 +154,7 @@ typedef struct
 // not used						0x10
 // not used						0x20
 // not used						0x40
-#define	SENSORS_SPECIALMODE		0x80
+#define	SENSORS_FLASHMODE		0x80
 /* flash_flags */
 #define	FLASH_UPDATECMD_RXED	0x01
 #define	FLASH_DATA_PHASE		0x02
@@ -180,15 +165,19 @@ typedef struct
 #define	FLASH_PROG_FW			0x40
 #define	FLASH_READY2FLASH		0x80
 
+// packet replies
+#define	PKT_CRC_ERROR			'C'
+#define	PKT_SEQ_ERROR			'N'
+#define	PKT_NOK_ERROR			'E'
+#define	PKT_OK					'Y'
+
+
 #define	MEMBRANEINFO_STD_LEN	32
 typedef struct
 {
 	uint8_t			header_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			board_address;
 	uint8_t			board_type;
-	uint8_t			name_string[MEMBRANEINFO_STD_LEN];
-	uint8_t			version_string[MEMBRANEINFO_STD_LEN];
-	uint8_t			Aos_version_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			DSC_serial_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			DSC_date[MEMBRANEINFO_STD_LEN];
 	uint8_t			tail_string[MEMBRANEINFO_STD_LEN];
@@ -197,105 +186,89 @@ typedef struct
 typedef struct
 {
 	uint8_t			header_string[32];
-	uint32_t		params[32];
+	int		threshold_low;
+	int		threshold_high;
+	int		hysteresis_K;
+	int		hard_limit_low;
+	uint32_t		hard_limit_high;
+	int		sine_number;
+	int		temp_threshold_low;
+	int		temp_threshold_high;
+	int		temp_hysteresis_K;
+	int		temp_hard_limit_low;
+	int		temp_hard_limit_high;
+	int		temp_sine_number;
 	uint8_t			tail_string[32];
 }MembraneParameters_TypeDef;
 
 typedef struct
 {
-	/*
-	uint8_t 		acquisition_status;
-	uint8_t			dac_state_machine;
-	uint32_t		operation_counter;
-	uint32_t		cycle_operation_counter;
-	//uint16_t		dac_data[4];
+	char			name_string[MEMBRANEINFO_STD_LEN];
+	char			version_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			Aos_version_string[MEMBRANEINFO_STD_LEN];
+}MembraneAppInfo_TypeDef;
+
+
+#define	DAC_MAX_VALUE			4096
+#define	DAC_3Q_VALUE			(DAC_MAX_VALUE - (DAC_MAX_VALUE/4))
+#define	DAC_HALF_VALUE			(DAC_MAX_VALUE/2)
+#define	DAC_QUARTER_VALUE		(DAC_MAX_VALUE/4)
+#define	DAC_OUT_VALUE			DAC_HALF_VALUE
+#define	PARAM_THRESHOLD_MIN		1024
+#define	PARAM_THRESHOLD_MAX		(DAC_MAX_VALUE-PARAM_THRESHOLD_MIN)
+#define	PARAM_HYSTERESIS		32
+#define	PARAM_HARDLIMIT_LOW		(PARAM_THRESHOLD_MIN/2)
+#define	PARAM_HARDLIMIT_HIGH	(DAC_MAX_VALUE-PARAM_HARDLIMIT_LOW)
+#define	PARAM_SINE_NUMBER		8
+
+typedef struct
+{
+	uint32_t		acquisition_raw_value;
+	uint16_t		conductivity_value;
+	uint16_t		adc_in_value;
 	uint16_t		dac_out_value;
+	uint16_t		algo_samples[4];
+	uint8_t			algo_samples_index;
+	uint8_t			algo_samples_counter;
+	uint8_t 		acquisition_status;
+	uint8_t 		opamp_gain;
 	uint16_t		internal_scale_factor;
-	*/
-	uint32_t		pt1000_data;
-	uint32_t		temperature_data;
-	uint32_t		vrefint_data;
-	/*
-	uint32_t		calibration_value;
-	uint32_t		conductivity_value;
-	*/
+	uint16_t		temperature_data;
 }AcqSystem_TypeDef;
 
 /* acquisition_status */
-#define	ACQ_DAC_RUN				0x01
-#define	ACQ_DAC_STARTED			0x02
-#define	ACQ_DAC_CYCLE_COMPLETE	0x04
-#define	ACQ_ADC_CALIBRATED		0x08
-#define	ACQ_ADC_RUN				0x10
-#define	ACQ_ADC_STARTED			0x20
-#define	ACQ_ADC_CYCLE_COMPLETE	0x40
+
+#define	ACQ_ADC_RUN				0x01
+#define	ACQ_NOISE_GET_COMPLETE	0x02
+#define	ACQ_DAC_GEN_COMPLETE	0x04
+#define	ACQ_ADC_CYCLE_COMPLETE	0x08
 #define	ACQ_COMPLETE			0x80
 
 #define	SENSORS_WAIT_INITIATOR_CHAR			0
 #define	SENSORS_DATA_PHASE					1
 
-
 #define	LINE_PROCESS_ID				1
 #define	LINE_LEN					32
 
-#define	NUM_ANALOG_CHANNELS			3
-#define	DAC_ANALOG_INDEX			0
-#define	DAC_VREFINT_INDEX			1
-#define	DAC_TEMPERATURE_INDEX		2
-#define	NUM_CALIBRATION_CHANNELS	2
-#define	DAC_DIRECT_INDEX			0
-#define	DAC_DAMPED_INDEX			1
-
-#define	DAC_STATE_IDLE				0
-#define	DAC_STATE_CALIBRATION		1
-#define	DAC_STATE_SINEGEN			2
-#define	DAC_STATE_ACQUISITION		3
-#define	DAC_STATE_CLOSING_CYCLE		4
-#define	DAC_STATE_CYCLE_END			5
-
-#define	DAC_NUM_CALIBRATION			8
-#define	ADC_NUM_CALIBRATION_CYCLES	32
-#define	DAC_NUM_SINES				4
-#define	DAC_NUM_ACQUISITION			32
-#define	ADC_NUM_ACQUISITION_CYCLES	256
-#define	DAC_ACQUIRE_TEMP			2
-#define	DAC_ACQUIRE_DATA			1
-#define	DAC_NUM_CLOSING				2
-
-#define	DAC_MAX_VALUE				4095
-#define	STEADY_VALUE				(DAC_MAX_VALUE / 2)
-#define	CALIBRATION_VALUE			64
+#define	NUM_ADC1_CHANNELS			4
+#define	ADC1_OPAMP_INDEX			0
+#define	ADC1_VREFINT_INDEX			1
+#define	ADC1_TEMPERATURE_INDEX		2
 
 #define	MINIMUM_THRESHOLD			(DAC_MAX_VALUE / 8)
 #define	MAXIMUM_THRESHOLD			(STEADY_VALUE+MINIMUM_THRESHOLD)
 
-#define	PRC1_MAILBOX_ID				1
-#define	PRC1_MAILBOX_LEN			8
-#define	PRC1_MAILBOX_MSGLEN			4
-#define	COMM_PROCESS_ID				1
-#define	ACQUISITION_PROCESS_ID		2
-
 extern	uint32_t	valid_samples,invalid_samples;
-extern	uint8_t		sensors_samples[MAX_LINES][MAX_SENSORS][SENSORS_TX_LEN];
-extern	uint8_t		sensors_map[MAX_LINES][MAX_SENSORS][SENSORS_TX_LEN];
 
 extern	MembraneSystem_TypeDef	MembraneSystem;
 extern	AcqSystem_TypeDef		AcqSystem;
+extern	UART_HandleTypeDef huart1;
+extern	ADC_HandleTypeDef hadc1;
+extern	DAC_HandleTypeDef hdac3;
+extern	OPAMP_HandleTypeDef hopamp1;
 
-extern	uint8_t Host_decode_USB_packet(uint8_t* Buf);
-extern	uint8_t Host_pack_USB_packet(uint8_t *rx_buf,uint8_t len);
-extern	void	System_Process_USB_Replies(void);
-extern	void	Create_VersionString(void);
+extern	TIM_HandleTypeDef htim6;
 
-/* activators.c */
-extern	uint8_t execute_command(uint8_t *cmd, uint8_t cmd_size);
-extern	void gpio_init(void);
-extern	void select_sensor_line(uint8_t line);
-extern	void set_sensor_line_re(uint8_t re_line);
-
-/* acquisition */
-extern	void algo_run_acquisition(void);
-
-
+extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
 
 #endif /* STM32U575_MEMBRANE_INCLUDES_H_ */

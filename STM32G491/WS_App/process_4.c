@@ -14,23 +14,21 @@
  * Project : A_os_MembraneSensor_Processes
 */
 /*
- * algo.h
+ * process_4.c
  *
- *  Created on: Sep 13, 2024
+ *  Created on: May 20, 2024
  *      Author: fil
  */
 
+#include "main.h"
 
-#ifndef STM32G491_MEMBRANEWSAPP_ALGO_H_
-#define STM32G491_MEMBRANEWSAPP_ALGO_H_
+#include "../../STM32G491/Common/A_os_includes.h"
 
+#ifdef	MEMBRANE_WS_2412171_00
 
+void process_4(uint32_t process_id)
+{
+	wait_event(HW_SLEEP_FOREVER);
+}
 
-extern	void algo_init(void);
-extern	void algo_set_dac_complete(void);
-extern	void algo_periodic_worker(void);
-extern	void algo_calibration_worker(void);
-extern	void algo_acquisition_worker(void);
-
-
-#endif /* STM32G491_MEMBRANEWSAPP_ALGO_H_ */
+#endif // #ifdef	MEMBRANE_2412171_00

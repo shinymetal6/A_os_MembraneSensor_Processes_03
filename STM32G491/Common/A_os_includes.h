@@ -20,8 +20,8 @@
  *      Author: fil
  */
 
-#ifndef STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
-#define STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
+#ifndef STM32G491_COMMON_INCLUDES_H_
+#define STM32G491_COMMON_INCLUDES_H_
 
 #include "../../../A_os/kernel/A.h"
 #include "../../../A_os/kernel/system_default.h"
@@ -29,4 +29,4 @@
 #include <stdio.h>
 #include <string.h>
 
-#endif /* STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_ */
+#endif /* STM32G491_COMMON_INCLUDES_H_ */

@@ -21,13 +21,12 @@
  */
 #include "main.h"
 #include "../../CurrentVersion.h"
-#include "../Common/A_os_includes.h"
-
-#ifdef	MEMBRANE_TEMP_2412171_00
-#include "membrane_includes.h"
+#include "../../STM32G491/Common/A_os_includes.h"
+#ifdef	MEMBRANE_WS_2412171_00
+#include "../../STM32G491/WS_App/membrane_includes.h"
 
 extern	void process_1_comm(uint32_t process_id);		//This is process1
-extern	void process_2_acquisition(uint32_t process_id);		//This is process2
+extern	void process_2(uint32_t process_id);		//This is process2
 extern	void process_3(uint32_t process_id);		//This is process3
 extern	void process_4(uint32_t process_id);			//This is process4
 
@@ -36,21 +35,36 @@ VERSIONING	uint8_t	app_version[32] 	= APP_VERSION;
 
 BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 {
-		.header_string = "MembraneInfo Header",
-		.board_address = 7,
+		.header_string = "MembraneInfoStart",
+		.board_address = 8,
 		.board_type = SENSORS_BOARD_TYPE,
+		/*
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
-		.DSC_serial_string = "TempSensor",
-		.DSC_date = "TempVersion",
-		.tail_string = "MembraneInfo Tail"
+		*/
+		.DSC_serial_string = "DSC 01",
+		.DSC_date = "14/11/2024",
+		.tail_string = "MembraneInfoEnd"
 };
 
 BOARDPARAMETERS_AREA	const MembraneParameters_TypeDef	MembraneFlashParameters =
 {
-		.header_string = "MembraneParameter Header",
-		.tail_string   = "MembraneParameter Tail"
+		.header_string  = "MembraneParametersStart",
+		.threshold_low  = PARAM_THRESHOLD_MIN,
+		.threshold_high = PARAM_THRESHOLD_MAX,
+		.hysteresis_K   = PARAM_HYSTERESIS,
+		.hard_limit_low = PARAM_HARDLIMIT_LOW,
+		.hard_limit_high= PARAM_HARDLIMIT_HIGH,
+		.sine_number	= PARAM_SINE_NUMBER,
+		.tail_string   = "MembraneParametersEnd"
+};
+
+__attribute__ ((aligned (32)))	const MembraneAppInfo_TypeDef	MembraneAppInfo =
+{
+		.name_string = APP_NAME,
+		.version_string = APP_VERSION,
+		.Aos_version_string = A_OS_VERSION,
 };
 
 __attribute__ ((aligned (32)))	MembraneInfo_TypeDef		MembraneInfo;
@@ -63,7 +77,7 @@ USRprcs_t	UserProcesses[USR_PROCESS_NUMBER] =
 				.stack_size = 1024,
 		},
 		{
-				.user_process = process_2_acquisition,
+				.user_process = process_2,
 				.stack_size = 1024,
 		},
 		{

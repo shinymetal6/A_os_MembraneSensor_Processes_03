@@ -21,11 +21,15 @@
  */
 #include "main.h"
 
-#include "../MembraneWsApp/A_os_includes.h"
+#include "A_os_includes.h"
 
 
-#ifdef	MEMBRANE_COMMON
-#include "../MembraneWsApp/membrane_includes.h"
+#ifdef	MEMBRANE_WS_2412171_00
+#include "../WS_App/membrane_includes.h"
+#endif // #ifdef	MEMBRANE_2412171_00
+#ifdef	MEMBRANE_TEMP_2412171_00
+#include "../T_App/membrane_includes.h"
+#endif // #ifdef	MEMBRANE_2412171_00
 
 extern	uint8_t					*_FlashDataRam_start;
 extern	uint8_t					*_board_info_start;
@@ -41,6 +45,8 @@ uint32_t	do_crc(uint32_t *data_ptr,uint32_t flash_data_len)
 void clear_flash_area(void)
 {
 uint32_t	i;
+
+	memset(reprog_data_area,0xff,FLASH_MAXLEN);
 	MembraneSystem.flash_address =  (uint8_t *)&reprog_data_area;
 	for(i=0;i<FLASHRAM_SIZE;i++)
 		MembraneSystem.flash_address[i] = 0xff;
@@ -66,4 +72,3 @@ void do_params_update(void)
 	pflash_data = (uint8_t *)&MembraneInfo;
 	flash_update((uint32_t )&_board_info_start-FLASH_BASE,(uint8_t *)&MembraneInfo,FLASH_PAGE_SIZE);
 }
-#endif // #ifdef	MEMBRANE_2412171_00

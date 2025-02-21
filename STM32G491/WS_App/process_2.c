@@ -11,22 +11,25 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Project : A_os_MembraneSensor_Processes
+ * Project : A_os
 */
 /*
- * A_os_includes.h
+ * process_2.c
  *
- *  Created on: May 20, 2024
+ *  Created on: Feb 17, 2025
  *      Author: fil
  */
 
-#ifndef STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
-#define STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
 
-#include "../../../A_os/kernel/A.h"
-#include "../../../A_os/kernel/system_default.h"
-#include "../../../A_os/kernel/A_exported_functions.h"
-#include <stdio.h>
-#include <string.h>
+#include "main.h"
 
-#endif /* STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_ */
+#include "../../STM32G491/Common/A_os_includes.h"
+
+#ifdef	MEMBRANE_WS_2412171_00
+
+void process_2(uint32_t process_id)
+{
+	wait_event(HW_SLEEP_FOREVER);
+}
+
+#endif // #ifdef	MEMBRANE_2412171_00
