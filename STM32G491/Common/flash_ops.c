@@ -54,21 +54,18 @@ uint32_t	i;
 
 void do_flash_update(uint8_t *flash_data,uint32_t size)
 {
-	flash_update(0,flash_data,size);
+	if ( *flash_data != 0xff)
+	{
+		if (( MembraneSystem.flash_flags & FLASH_READY2FLASH) == FLASH_READY2FLASH)
+			flash_update(0,flash_data,size);
+	}
 }
 
-uint32_t	pflash_address,psize;
-uint8_t		*pflash_data;
-void local_flash_update(uint32_t flash_address,uint8_t *flash_data,uint32_t size)
-{
-	pflash_address = flash_address;
-	pflash_data = flash_data;
-	psize = size;
-}
-
+/*
 void do_params_update(void)
 {
 	pflash_address = (uint32_t )&_board_info_start-FLASH_BASE;
 	pflash_data = (uint8_t *)&MembraneInfo;
 	flash_update((uint32_t )&_board_info_start-FLASH_BASE,(uint8_t *)&MembraneInfo,FLASH_PAGE_SIZE);
 }
+*/

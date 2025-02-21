@@ -33,6 +33,7 @@
 #ifdef	MEMBRANE_WS_2412171_00
 #include "membrane_includes.h"
 
+#define	SENSVERSION	"Mws 1.3.0c"
 
 extern	MembraneInfo_TypeDef		MembraneFlashInfo;
 extern	MembraneInfo_TypeDef		MembraneInfo;
@@ -88,7 +89,6 @@ uint32_t	conductivity,adc_raw_value;
 
 #endif
 
-#define	SENSVERSION	"Mws 1.3.0"
 void compile_version_and_send(void)
 {
 uint16_t	len;
@@ -205,6 +205,10 @@ uint8_t		send_version_info=0;
 					{
 						compile_flash_reply_and_send(DOWNLOAD_COMMAND,update_packet_process() );
 					}
+					if ( packet_process_commands_result == WRITE_FLASH_COMMAND )
+					{
+						do_flash_update(MembraneSystem.flash_address,FLASH_MAXLEN);
+					}
 				}
 			}
 		}
@@ -212,6 +216,7 @@ uint8_t		send_version_info=0;
 		{
 			if (( AcqSystem.acquisition_status & ACQ_ADC_RUN) == ACQ_ADC_RUN)
 			{
+				AcqSystem.temperature_state = 0;
 				AcqSystem.algo_samples_index &= 0x03;
 				AcqSystem.algo_samples[AcqSystem.algo_samples_index] = adc_data[ADC1_OPAMP_INDEX];
 				AcqSystem.algo_samples_index++;
@@ -221,6 +226,28 @@ uint8_t		send_version_info=0;
 					AcqSystem.adc_in_value = (AcqSystem.algo_samples[2] + AcqSystem.algo_samples[3])/2;
 					apply_algo();
 					compile_data_and_send();
+				}
+			}
+			else
+			{
+				switch(AcqSystem.temperature_state)
+				{
+				case 2 :
+					hadc1.Instance->SMPR2 = 0x6180000;
+					AcqSystem.temperature_state++;
+					break;
+				case 8 :
+					AcqSystem.vrefint_data	= __LL_ADC_CALC_VREFANALOG_VOLTAGE(adc_data[ADC1_VREFINT_INDEX], LL_ADC_RESOLUTION_12B);
+					AcqSystem.tmpr_data 	=__LL_ADC_CALC_TEMPERATURE(AcqSystem.vrefint_data, adc_data[ADC1_TEMPERATURE_INDEX], LL_ADC_RESOLUTION_12B);
+					AcqSystem.tmpr_data -= 5;
+					AcqSystem.temperature_data = (uint16_t )AcqSystem.tmpr_data;
+					hadc1.Instance->SMPR2 = 0;
+					AcqSystem.temperature_state++;
+					break;
+				case 12 :
+					AcqSystem.temperature_state--;
+				default :
+					AcqSystem.temperature_state++;
 				}
 			}
 		}

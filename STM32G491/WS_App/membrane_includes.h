@@ -233,7 +233,10 @@ typedef struct
 	uint8_t 		acquisition_status;
 	uint8_t 		opamp_gain;
 	uint16_t		internal_scale_factor;
-	uint16_t		temperature_data;
+	uint32_t		temperature_data;
+	uint32_t		vrefint_data;
+	uint16_t		tmpr_data;
+	uint8_t			temperature_state;
 }AcqSystem_TypeDef;
 
 /* acquisition_status */
