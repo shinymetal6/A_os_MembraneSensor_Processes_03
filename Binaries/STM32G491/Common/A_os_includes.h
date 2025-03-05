@@ -11,24 +11,22 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Project : A_os
+ * Project : A_os_MembraneSensor_Processes
 */
 /*
- * algo.h
+ * A_os_includes.h
  *
- *  Created on: Feb 17, 2025
+ *  Created on: May 20, 2024
  *      Author: fil
  */
 
-#ifndef STM32G491_WS_APP_ALGO_H_
-#define STM32G491_WS_APP_ALGO_H_
+#ifndef STM32G491_COMMON_INCLUDES_H_
+#define STM32G491_COMMON_INCLUDES_H_
 
-#define	ALGO_ITERATIONS		64
+#include "../../../A_os/kernel/A.h"
+#include "../../../A_os/kernel/system_default.h"
+#include "../../../A_os/kernel/A_exported_functions.h"
+#include <stdio.h>
+#include <string.h>
 
-extern	void algo_init(void);
-extern	void algo_start(void);
-extern	void algo_stop(void);
-extern	uint8_t apply_algo(void);
-
-
-#endif /* STM32G491_WS_APP_ALGO_H_ */
+#endif /* STM32G491_COMMON_INCLUDES_H_ */

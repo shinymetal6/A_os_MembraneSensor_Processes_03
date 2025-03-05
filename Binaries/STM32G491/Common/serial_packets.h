@@ -11,24 +11,20 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Project : A_os
+ * Project : A_os_MembraneSensor_Processes
 */
 /*
- * algo.h
+ * serial_packets.h
  *
- *  Created on: Feb 17, 2025
+ *  Created on: Sep 12, 2024
  *      Author: fil
  */
 
-#ifndef STM32G491_WS_APP_ALGO_H_
-#define STM32G491_WS_APP_ALGO_H_
 
-#define	ALGO_ITERATIONS		64
+#ifndef STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_
+#define STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_
 
-extern	void algo_init(void);
-extern	void algo_start(void);
-extern	void algo_stop(void);
-extern	uint8_t apply_algo(void);
+extern	uint8_t packet_process_commands(void);
+extern	uint8_t update_packet_process(void);
 
-
-#endif /* STM32G491_WS_APP_ALGO_H_ */
+#endif /* STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_ */

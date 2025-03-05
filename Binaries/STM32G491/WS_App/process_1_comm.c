@@ -33,7 +33,7 @@
 #ifdef	MEMBRANE_WS_2412171_00
 #include "membrane_includes.h"
 
-#define	SENSVERSION	"Mws 1.3.0d"
+#define	SENSVERSION	"Mws 1.3.0c"
 
 extern	MembraneInfo_TypeDef		MembraneFlashInfo;
 extern	MembraneInfo_TypeDef		MembraneInfo;
@@ -121,14 +121,13 @@ void compile_data_and_send(void)
 	uart1_tx_buffer[SENSORS_CMD+1] = SENSORS_GET_DATA;
 	uart1_tx_buffer[SENSORS_ADDRESS+1] = MembraneInfo.board_address;
 	uart1_tx_buffer[SENSORS_TYPE+1] = MembraneInfo.board_type;
-	uart1_tx_buffer[SENSORS_TYPE+2] = AcqSystem.stored_dac_out_value>>8;
-	uart1_tx_buffer[SENSORS_TYPE+3] = AcqSystem.stored_dac_out_value&0xff;
-	uart1_tx_buffer[SENSORS_TYPE+4] = AcqSystem.conductivity_value>>8;
-	uart1_tx_buffer[SENSORS_TYPE+5] = AcqSystem.conductivity_value & 0xff;
-	uart1_tx_buffer[SENSORS_TYPE+6] = AcqSystem.temperature_data>>8;
-	uart1_tx_buffer[SENSORS_TYPE+7] = AcqSystem.temperature_data& 0xff;
-	uart1_tx_buffer[SENSORS_TYPE+8] = '>';
-	uart1_tx_buffer[SENSORS_TYPE+9] = 0;
+	uart1_tx_buffer[SENSORS_TYPE+2] = AcqSystem.internal_scale_factor;
+	uart1_tx_buffer[SENSORS_TYPE+3] = AcqSystem.conductivity_value>>8;
+	uart1_tx_buffer[SENSORS_TYPE+4] = AcqSystem.conductivity_value & 0xff;
+	uart1_tx_buffer[SENSORS_TYPE+5] = AcqSystem.temperature_data>>8;
+	uart1_tx_buffer[SENSORS_TYPE+6] = AcqSystem.temperature_data& 0xff;
+	uart1_tx_buffer[SENSORS_TYPE+7] = '>';
+	uart1_tx_buffer[SENSORS_TYPE+8] = 0;
 	uart_send(uart1_driver_handle, uart1_tx_buffer,12);
 }
 

@@ -228,13 +228,11 @@ typedef struct
 	uint16_t		conductivity_value;
 	uint16_t		adc_in_value;
 	uint16_t		dac_out_value;
-	uint16_t		stored_dac_out_value;
 	uint16_t		algo_samples[4];
 	uint8_t			algo_samples_index;
 	uint8_t			algo_samples_counter;
 	uint8_t 		acquisition_status;
 	uint8_t 		opamp_gain;
-	uint16_t		internal_scale_factor;
 	uint32_t		temperature_data;
 	uint32_t		vrefint_data;
 	uint16_t		tmpr_data;

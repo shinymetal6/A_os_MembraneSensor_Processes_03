@@ -60,7 +60,6 @@ void algo_start(void)
 
 void algo_stop(void)
 {
-	AcqSystem.stored_dac_out_value = AcqSystem.dac_out_value;
 	AcqSystem.dac_out_value = 0;
 	HAL_DAC_SetValue(&hdac3, DAC_CHANNEL_1, DAC_ALIGN_12B_R, AcqSystem.dac_out_value);
 	AcqSystem.algo_samples_index = 0;
@@ -72,7 +71,7 @@ void algo_stop(void)
 uint8_t apply_algo(void)
 {
 uint16_t i;
-	for(i=0;i<ALGO_ITERATIONS;i++)
+	for(i=0;i<32;i++)
 	{
 		if ( AcqSystem.adc_in_value < PARAM_THRESHOLD_MIN )
 		{

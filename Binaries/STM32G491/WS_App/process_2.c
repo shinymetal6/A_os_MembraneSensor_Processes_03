@@ -14,21 +14,22 @@
  * Project : A_os
 */
 /*
- * algo.h
+ * process_2.c
  *
  *  Created on: Feb 17, 2025
  *      Author: fil
  */
 
-#ifndef STM32G491_WS_APP_ALGO_H_
-#define STM32G491_WS_APP_ALGO_H_
 
-#define	ALGO_ITERATIONS		64
+#include "main.h"
 
-extern	void algo_init(void);
-extern	void algo_start(void);
-extern	void algo_stop(void);
-extern	uint8_t apply_algo(void);
+#include "../../STM32G491/Common/A_os_includes.h"
 
+#ifdef	MEMBRANE_WS_2412171_00
 
-#endif /* STM32G491_WS_APP_ALGO_H_ */
+void process_2(uint32_t process_id)
+{
+	wait_event(HW_SLEEP_FOREVER);
+}
+
+#endif // #ifdef	MEMBRANE_2412171_00

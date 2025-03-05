@@ -23,8 +23,6 @@
 #ifndef STM32G491_WS_APP_ALGO_H_
 #define STM32G491_WS_APP_ALGO_H_
 
-#define	ALGO_ITERATIONS		64
-
 extern	void algo_init(void);
 extern	void algo_start(void);
 extern	void algo_stop(void);

@@ -11,24 +11,24 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Project : A_os
+ * Project : A_os_MembraneSensor_Processes
 */
 /*
- * algo.h
+ * flash_ops.h
  *
- *  Created on: Feb 17, 2025
+ *  Created on: Sep 13, 2024
  *      Author: fil
  */
 
-#ifndef STM32G491_WS_APP_ALGO_H_
-#define STM32G491_WS_APP_ALGO_H_
 
-#define	ALGO_ITERATIONS		64
+#ifndef STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_
+#define STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_
 
-extern	void algo_init(void);
-extern	void algo_start(void);
-extern	void algo_stop(void);
-extern	uint8_t apply_algo(void);
+extern	void clear_flash_area(void);
+extern	void flash_check(uint8_t *flash_data_ptr,uint32_t size);
+extern	uint32_t do_crc(uint32_t 	*data_ptr,uint32_t flash_data_len);
+extern	void do_flash_update(uint8_t *flash_data,uint32_t size);
+extern	void do_params_update(void);
 
 
-#endif /* STM32G491_WS_APP_ALGO_H_ */
+#endif /* STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_ */
